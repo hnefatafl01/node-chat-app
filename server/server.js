@@ -1,12 +1,36 @@
 const express = require('express');
 const app = express();
+const socketIO = require('socket.io');
+
+const http = require('http');
 const path = require('path');
+
 var port = process.env.PORT || 3000;
+var server = http.createServer(app);
+var io = socketIO(server);
+
+io.on('connection', (socket) => {
+    console.log('connected to client- new user connected');
+
+    socket.emit('newMessage', {
+        from: 'me@email.com',
+        text: 'doo doo',
+        createdAt: new Date()
+    });
+
+    socket.on('createMessage', (message) => {
+        console.log('created message: ', message);
+    })
+
+    socket.on('disconnect', () => {
+        console.log('client disconnected');
+    })
+})
 
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/favicon.ico', function(req, res) {
+app.get('/favicon.ico', (req, res) => {
     res.status(204);
 });
 
-app.listen(port, () => console.log(`listening on port: ${port}`));
+server.listen(port, () => console.log(`listening on port: ${port}`));
