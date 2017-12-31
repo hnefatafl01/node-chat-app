@@ -5,37 +5,22 @@ const socketIO = require('socket.io');
 const http = require('http');
 const path = require('path');
 
+var { generateMessage } = require('./utils/message');
 var port = process.env.PORT || 3000;
 var server = http.createServer(app);
 var io = socketIO(server);
 
 io.on('connection', (socket) => {
     console.log('connected to client- new user connected');
-    socket.emit('newMessage', {
-        from: 'Admin',
-        text: 'Welcome to nes chat!',
-        createdAt: new Date().getTime()
-    });
 
-    socket.broadcast.emit('newMessage', {
-        from: 'Admin',
-        text: 'New user joined chat',
-        createdAt: new Date().getTime()
-    });
+    socket.emit('newMessage', generateMessage('Admin', 'Welcome to nes chat!'));
 
-    socket.on('createMessage', (message) => {
+    socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined chat'));
+
+    socket.on('createMessage', (message, callback) => {
         console.log('created message: ', message);
-        // io.emit('newMessage', {
-        //     text: message.text,
-        //     from: message.from,
-        //     createdAt: new Date().getTime()
-        // });
-
-        socket.broadcast.emit('newMessage', {
-            from: message.from,
-            text: message.from,
-            createdAt: new Date().getTime()
-        });
+        io.emit('newMessage', generateMessage(message.from, message.text));
+        callback('data sent from server');
     });
 
     socket.on('disconnect', () => {
